@@ -16,15 +16,14 @@ Main script is *BC_Skript.sh* and intended to bias correct the temperature (mean
 
 - GDL/IDL (GNU Data Language)
 - CDO (Climate Data Operators)
-- LoadLeveler calls may be replaced with usual shell scripts invocations
+- LoadLeveler calls may be replaced with usual shell scripts calls
 
-To run the script use, e.g.,
-./BC_Skript.sh 'T' 'rcp2p6' 'yes' 'HadGEM2-ES'
+To run the script use, e.g., `./BC_Skript.sh 'T' 'rcp2p6' 'yes' 'HadGEM2-ES'`
 
 Possible input arguments
 - $1 ... vars: P, T, lw, sw, ps, wind, rhs
 - $2 ... rcps: rcp2p6 rcp4p5 rcp6p0 rcp8p5
-- $3 ... full: yey, no
+- $3 ... full: yes, no
 - $4 ... GCM: HadGEM2-ES, IPSL-CM5A-LR, GFDL-ESM2M, MIROC-ESM-CHEM, NorESM1-M, CNRM-CM5
 
 Basic configuration is saved in **exports**.
