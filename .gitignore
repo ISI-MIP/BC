@@ -1,0 +1,8 @@
+ll.logs
+*.lock
+*mon*.sh
+*gdl_exports
+logfiles
+dummy*
+period.pro
+runidx.pro

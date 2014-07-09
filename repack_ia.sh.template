@@ -1,0 +1,458 @@
+#!/bin/bash
+# @ initialdir = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+# @ input = /dev/null
+# @ job_type = serial
+# @ class = short
+# @ group = isimip
+# @ notification = complete
+# @ notify_user = buechner@pik-potsdam.de
+# @ job_name = repack
+# @ comment = ISI-MIP IO
+# @ checkpoint = no
+# @ restart = no
+# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack._VAR_.out
+# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack._VAR_.err
+# @ queue
+
+###############################################################
+### input #####################################################
+###############################################################
+### $1 ... modelname (e.g., HadGEM2-ES, IPSL-CM5A-LR, MIROC-ESM-CHEM, GFDL-ESM2M, NorESM1-M, CNRM-CM5)
+### $2 ... rcp (e.g., rcp2p6, rcp4p5, rcp6p0, rcp8p5)
+### $3 ... period 'yes' or 'no' (1860-1899)
+### $4 ... period 'yes' or 'no' (1900-1949)
+### $5 ... period 'yes' or 'no' (1950-1959)
+### $6 ... period 'yes' or 'no' (1960-1999)
+### $7 ... period 'yes' or 'no' (2000-2004/2005)
+### $8 ... period 'yes' or 'no' (2005/2006-2099)
+### $9 ... variable (e.g., pr prsn tas tasmin tasmax wind uas vas rlds rsds ps)
+###############################################################
+
+. exports
+
+if [ $# != 0  ];then
+    GCM=$1
+    RCP=$2       #"rcpXpX"
+    VAR=$9
+    COMPUTE1=$3  #"no"  1860-1899
+    COMPUTE2=$4  #"no"  1900-1949
+    COMPUTE3=$5  #"no"  1950-1959
+    COMPUTE4=$6  #"no"  1960-1999
+    COMPUTE5=$7  #"no"  2000-2005
+    COMPUTE6=$8  #"yes" 2006-2099
+else
+    GCM=_GCM_
+    RCP=_RCP_      #"rcpXpX"
+    VAR=_VAR_
+    COMPUTE1=_COMPUTE1_  #"no"  1860-1899
+    COMPUTE2=_COMPUTE2_  #"no"  1900-1949
+    COMPUTE3=_COMPUTE3_  #"no"  1950-1959
+    COMPUTE4=_COMPUTE4_  #"no"  1960-1999
+    COMPUTE5=_COMPUTE5_  #"no"  2000-2005
+    COMPUTE6=_COMPUTE6_  #"yes" 2006-2099
+fi
+
+./create_cdl_header.sh $VAR $GCM
+
+cutyear=2005
+
+case $GCM in
+    HadGEM2-ES)
+        GCMID="hadgem2-es"
+        cutyear=2004;;
+    IPSL-CM5A-LR)
+        GCMID="ipsl-cm5a-lr";;
+    MIROC-ESM-CHEM)
+        GCMID="miroc-esm-chem";;
+    GFDL-ESM2M)
+        GCMID="gfdl-esm2m";;
+    NorESM1-M)
+        GCMID="noresm1-m";;
+    CNRM-CM5)
+        GCMID="cnrm-cm5";;
+    CCSM4)
+        GCMID="ccsm4";;
+    *)
+        echo
+        echo 'model is not in the list, please provide GCMID'
+        exit;;
+esac
+
+[[ $GCM = "GFDL-ESM2M" ]] && HIST_START_YEAR=1861 || HIST_START_YEAR=1860
+
+########### paths ###############
+inpath_crugrid=$BASE_PATH
+inpath_model="/iplex/01/ipcc_ar4_pcmdi/cmip5_ethz_mirror/pcmdi_data"
+outpath_crugrid="/iplex/01/2011/isimip/data/modelData"
+
+inpath=$inpath_crugrid/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
+outpath=$inpath/repacked
+
+mkdir -p $outpath/merged
+
+REPACKING="yes"
+ZIPPING="no"
+NC_FORMAT="NC4CZ" # "NC, NC4C, NC4CZ (classic compressed netCDF4, needs cdo compiiled with zlib support!)
+
+##################################
+
+case $NC_FORMAT in
+    NC)
+        NC_SUFF="nc";CDO_OP="-O -s -f nc";;
+    NC4C)
+        NC_SUFF="nc4";CDO_OP="-O -s -f nc4c";;
+    NC4CZ)
+        NC_SUFF="nc4";CDO_OP="-O -s -f nc4c -z zip_5";;
+    *)
+        echo "no valid netCDF format specified";exit;;
+esac
+
+name="${VAR}_bced_1960_1999_"
+case $VAR in
+    tas)
+        name1="T_BCed_1960_1999_";;
+    tasmin)
+        name1="Tmin_BCed_1960_1999_";;
+    tasmax)
+        name1="Tmax_BCed_1960_1999_";;
+    pr)
+        name1="pr_BCed_1960_1999_";;
+    prsn)
+        name1="pr_PRSN_BCed_1960_1999_";;
+    ps)
+        name1="ps_BCed_1960_1999_";;
+    huss)
+        name1="huss_BCed_1960_1999_";;
+    rsds)
+        name1="sw_BCed_1960_1999_";;
+    rlds)
+        name1="lw_BCed_1960_1999_";;
+    uas)
+        name1="U_BCed_1960_1999_";;
+    vas)
+        name1="V_BCed_1960_1999_";;
+    wind)
+        name1="wind_BCed_1960_1999_";;
+    rhs)
+        name="rhs_"
+        name1="rhs_";;
+esac
+
+#######################################
+
+if [[ $REPACKING = "yes" ]];then
+
+    echo " Repacking..."
+    mrID=$GCMID"_historical"
+
+    ##############################  first part of historical run
+
+    if [[ $COMPUTE1 = "yes" ]]
+    then
+
+        echo "  ...${HIST_START_YEAR}-1899"
+        start_appl_period="${HIST_START_YEAR}"
+        end_appl_period="1899"
+
+        i=$start_appl_period
+        while [ $i -le $end_appl_period ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period ${HIST_START_YEAR}-1899 excluded"
+    fi
+
+    ############################## second part of historical run
+
+    if [[ $COMPUTE2 = "yes" ]]
+    then
+
+        echo "  ...1900-1949"
+        start_appl_period="1900"
+        end_appl_period="1949"
+
+        i=$start_appl_period
+        while [ $i -le $end_appl_period ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period 1900-1949 excluded"
+    fi
+
+    ############################## third part of historical run
+
+    if [[ $COMPUTE3 = "yes" ]]
+    then
+
+        echo "  ...1950-1959"
+        start_appl_period="1950"
+        end_appl_period="1959"
+
+        i=$start_appl_period
+        while [ $i -le $end_appl_period ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period 1950-1959 excluded"
+    fi
+
+    ############################## fourth part of historical run
+
+    if [[ $COMPUTE4 = "yes" ]]
+    then
+
+        echo "  ...1960-1999"
+        start_appl_period="1960"
+        end_appl_period="1999"
+
+        i=$start_appl_period
+        while [ $i -le $end_appl_period ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period 1960-1999 excluded"
+    fi
+
+    ############################## fifth part of historical run
+
+    if [[ $COMPUTE5 = "yes" ]]
+    then
+
+        echo "  ...2000-2004/5"
+        start_appl_period="2000"
+        end_appl_period="2099"
+
+        i=2000
+        while [ $i -le $cutyear ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period 2000-2004 excluded"
+    fi
+
+    ############################## rcp run
+
+    if [[ $COMPUTE6 = "yes" ]]
+    then
+        mrID=$GCMID"_"$RCP
+        echo "  ...2005/6-2099"
+        start_appl_period="2000"
+        end_appl_period="2099"
+
+        i=2005
+        while [ $i -le 2099 ]
+        do
+            [[ -f $outpath/$name"_"$mrID"_"$i.nc ]] && i=$(($i + 1)) && continue
+            ncgen \
+                -o $outpath/$name"_"$mrID"_"$i.nc \
+                netcdf_info_$GCM"_"$VAR.cdl
+            repack/repack_BCdata \
+                $inpath/finalOutputData/$name1$start_appl_period"_"$end_appl_period"_"test.nc \
+                $outpath/$name"_"$mrID"_"$i.nc \
+                $start_appl_period $i
+            i=$(($i + 1))
+        done
+
+    else echo "  time period 2005-2099 excluded"
+    fi
+
+    ######## MERGE DECADES #############
+
+    echo " merge decades..."
+    mrID=$GCMID"_historical"
+    # ${HIST_START_YEAR}-1900
+    if [[ $COMPUTE1 = "yes" ]]
+    then
+        echo "  ...${HIST_START_YEAR}-1900"
+        decade="6"
+        OFILE=$outpath/merged/$name$mrID"_18"$decade"0.nc4"
+        cdo $CDO_OP -copy \
+            $outpath/$name"_"$mrID"_18"$decade"0.nc" \
+            $OFILE
+        echo "remove history from $OFILE"
+        ncatted -O -h -a history,global,d,, $OFILE
+        while [ $decade -le "9" ]
+        do
+            if [ $decade -eq "9" ];then
+                century="19";decade2="0"
+            else
+                century="18";decade2=$(($decade + 1))
+            fi
+            OFILE=$outpath/merged/$name$mrID"_18"$decade"1-"$century$decade2"0."$NC_SUFF
+            [[ ! -f $OFILE ]] && \
+                cdo $CDO_OP -cat \
+                $outpath/$name"_"$mrID"_18"$decade[1-9].nc \
+                $outpath/$name"_"$mrID"_"$century$decade2[0].nc \
+                $OFILE
+            echo "remove history from $OFILE"
+            ncatted -O -h -a history,global,d,, $OFILE
+            decade=$(($decade + 1))
+        done
+    fi
+
+    #1901-1950
+    if [[ $COMPUTE2 = "yes" ]]
+    then
+        echo "  ...1901-1950"
+        century="19"
+        decade="0"
+        while [ $decade -le "4" ];do
+            decade2=$(($decade + 1))
+
+            OFILE=$outpath/merged/$name$mrID"_19"$decade"1-"$century$decade2"0."$NC_SUFF
+            [[ ! -f $OFILE ]] && \
+                cdo $CDO_OP -cat \
+                $outpath/$name"_"$mrID"_19"$decade[1-9].nc \
+                $outpath/$name"_"$mrID"_"$century$decade2[0].nc \
+                $OFILE
+            echo "remove history from $OFILE"
+            ncatted -O -h -a history,global,d,, $OFILE
+            decade=$(($decade + 1))
+        done
+    fi
+
+    # 1950-1960
+    if [[ $COMPUTE3 = "yes" ]]
+    then
+        echo "  ...1950"
+        OFILE=$outpath/merged/$name$mrID"_1950".$NC_SUFF
+        [[ ! -f $OFILE ]] && \
+            cdo $CDO_OP -copy \
+            $outpath/$name"_"$mrID"_1950".nc \
+            $OFILE
+        echo "remove history from $OFILE"
+        ncatted -O -h -a history,global,d,, $OFILE
+        echo "  ...1951-1960"
+        decade="5"
+        century="19"
+        decade2=$(($decade + 1))
+
+        OFILE=$outpath/merged/$name$mrID"_19"$decade"1-"$century$decade2"0."$NC_SUFF
+        [[ ! -f $OFILE ]] && \
+            cdo $CDO_OP -cat \
+            $outpath/$name"_"$mrID"_19"$decade[1-9].nc \
+            $outpath/$name"_"$mrID"_"$century$decade2[0].nc \
+            $OFILE
+        echo "remove history from $OFILE"
+        ncatted -O -h -a history,global,d,, $OFILE
+    fi
+
+    #1961-2000
+    if [[ $COMPUTE4 = "yes" ]]
+    then
+        echo "  ...1961-2000"
+        decade="6"
+        while [ $decade -le "9" ];do
+            if [ $decade -eq "9" ];then
+                century="20";decade2="0"
+            else
+                century="19";decade2=$(($decade + 1))
+            fi
+
+            OFILE=$outpath/merged/$name$mrID"_19"$decade"1-"$century$decade2"0."$NC_SUFF
+            [[ ! -f $OFILE ]] && \
+                cdo $CDO_OP -cat \
+                $outpath/$name"_"$mrID"_19"$decade[1-9].nc \
+                $outpath/$name"_"$mrID"_"$century$decade2[0].nc \
+                $OFILE
+            echo "remove history from $OFILE"
+            ncatted -O -h -a history,global,d,, $OFILE
+            decade=$(($decade + 1))
+        done
+    fi
+
+    #2001-2004/5
+    if [[ $COMPUTE5 = "yes" ]]
+    then
+        echo "  ...2001-2004/5"
+        century="20"
+        decade="0"
+        lastyear=$(echo $cutyear |cut -c 4-)
+        OFILE=$outpath/merged/$name$mrID"_20"$decade"1-"$century$decade2$lastyear.$NC_SUFF
+        [[ ! -f $OFILE ]] && \
+            cdo $CDO_OP -cat \
+            $outpath/$name"_"$mrID"_20"$decade[1-$lastyear].nc \
+            $OFILE
+        echo "remove history from $OFILE"
+        ncatted -O -h -a history,global,d,, $OFILE
+    fi
+
+    #2005/6-2099
+    if [[ $COMPUTE6 = "yes" ]]
+    then
+        echo "  ...2005/6-2099"
+        mrID=$GCMID"_"$RCP
+        century="20"
+        decade="0"
+        while [ $decade -le "9" ];do
+            decade2=$(($decade + 1))
+            firstyear=1
+            lastyear=0
+            lastfile=$outpath/$name"_"$mrID"_20"$decade2[0].nc
+            case $decade in
+                0)
+                    firstyear=$(echo $cutyear |cut -c 4-);firstyear=$(($firstyear + 1));;
+                9)
+                    lastyear=9
+                    decade2=$decade
+                    lastfile="";;
+            esac
+
+            OFILE=$outpath/merged/$name$mrID"_20"$decade$firstyear-$century$decade2$lastyear.$NC_SUFF
+            [[ ! -f $OFILE ]] && \
+                cdo $CDO_OP -cat \
+                $outpath/$name"_"$mrID"_20"$decade[$firstyear-9].nc $lastfile \
+                $OFILE
+            echo "remove history from $OFILE"
+            ncatted -O -h -a history,global,d,, $OFILE
+            decade=$(($decade + 1))
+        done
+    fi
+fi
+
+rm -fv repack_ia.$VAR.lock repack_ia.sh.$VAR netcdf_info_$GCM"_"$VAR.cdl

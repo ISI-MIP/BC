@@ -1,0 +1,21 @@
+#versioning
+export BC_VERSION="v2" # v2 refers to bc version described by Hempel S. et al
+export BC_RUN_INTERNAL="1" # internal version
+
+# data paths
+export BASE_PATH=/iplex/01/2011/isimip/data/BC_ISIMIP2
+export GCM_INPUT_BASE_PATH=/iplex/01/2011/isimip/inputdata_unbced
+export WFD_PATH=/iplex/01/2011/isimip/data/BC_ISIMIP2/WFD
+
+# GDL PATHS
+#export PATH=$PATH:/iplex/01/2011/isimip/bin
+#export GDL_PATH=/iplex/01/2011/isimip/share/gnudatalanguage/lib/cmsvlib:/iplex/01/2011/isimip/share/gnudatalanguage/lib
+
+export GDL_PATH=/home/buechner/tools/share/gnudatalanguage/lib/cmsvlib:/home/buechner/tools/share/gnudatalanguage/lib
+
+# GCM realisation
+export ENSEMBLE="r1i1p1"
+
+# periods to bias correct
+#export PERIODS="2000_2049 2050_2099 1960_1999 1950_1959 1861_1899 1900_1949"
+export PERIODS="2000_2049 2050_2099 1960_1999 1950_1959"

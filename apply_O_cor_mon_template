@@ -1,0 +1,19 @@
+#!/bin/sh
+. exports
+cd /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+
+gdl <<EOF
+.r period.pro
+.r runidx.pro
+.r gdl_exports
+.r definitions_generic.pro
+.r definitions_internal_generic.pro
+.r gdl_routines/generic/functions.pro
+mon = _MON_
+.r gdl_routines/$BC_VERSION/apply_O_cor_mon.pro
+exit
+EOF
+
+
+# remove main script lock
+rm apply_O_cor_mon$((_MON_ + 1)).*

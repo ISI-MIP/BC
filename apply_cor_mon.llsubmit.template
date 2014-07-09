@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# @ initialdir = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$(job_name).out
+# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$(job_name).err
+# @ input = /dev/null
+# @ job_type = serial
+# @ class = short
+# @ group = isimip
+# @ notification = complete
+# @ notify_user = buechner@pik-potsdam.de
+## @ environment = COPY_ALL
+# @ job_name = apply_cor_all
+# @ comment = ISI-MIP IO
+# @ checkpoint = no
+# @ restart = no
+# @ queue
+

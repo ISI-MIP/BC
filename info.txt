@@ -1,0 +1,36 @@
+################################################################
+
+Be aware that in particular the calc*.pro needs a lot of memory (at the moment 6 months are intended to run in parallel), thus run the script on viss rather than on login. Most of the apply*.pro are send to loadleveler labeled as largemem (not possible in all cases).
+
+################################################################
+
+parameter, cut-offs, ect. for multiplicative algorithm:
+
+- assure statistical significance (calc*.pro)
+  - The dry day cut-off (set in definitions_internal.pro) for observational data is translated into a threshold for the GCM.
+  - A threshold for the monthly mean and the minimal number of wet day is set at the beginning of calc*.pro .
+- convergence of nonlinear fit (calc*.pro):
+  - There is an internal test of the fitting algorithm that checks for convergence (tolerance 10E-16 within 1000 iterations). If the fit does not converge select the linear fit.
+  - In the case that a nonlinear fit was successful check if the root mean square error of fittet nonlinear function is larger than 0.05. If this is the case then compare it with the error of a linear fit and select the parameters (nonlinear or linear) that yield the smaller error
+  - Save extreme values of normalized observation data over the whole construction period as an indicator for a plausible range of values
+- catch extremes / outlier (apply*.pro)
+  - The multiplicative factor for the correction of the longterm mean (meanratio) is truncated at 10 and 1/10.
+  - After the transfer function was applied to the normalized values it is tested if the values is out of the historical range enlarged by 50% -- i.e. [min-0.25(max-min),max+0.25(max-min)]. If this is the case set outliers are set to the corresponding limit of the interval.
+    For the latest version of the algorithm it has not been check how often such a case really occurs.
+  - If there are still negative values those would be just set to zero.
+  - At the very end extreme high values of the corrected (not normalized) data will be truncated. Threshold values are defined at the beginning of apply*.pro .
+
+########################################################################################################
+
+How often is which typ of fit?
+
+Results for HadGEM2-ES averaged over all months (percentage of grid cells)
+	linear	       nonlinear
+ps	61%	       39%
+lw	55%	       45%
+sw	16%	       84%
+wind	54%	       46%
+pr	54%	       46%
+
+
+
