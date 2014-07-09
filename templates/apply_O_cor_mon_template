@@ -1,6 +1,6 @@
 #!/bin/sh
-. exports
 cd /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+. exports
 
 gdl <<EOF
 .r period.pro
