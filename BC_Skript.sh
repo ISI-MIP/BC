@@ -22,16 +22,12 @@ WRKDIR=$(pwd)
 
 GCM=$4
 
-
 # create output folders
-
 DATA_PATH=$BASE_PATH/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
-
 OUTPATH1=$DATA_PATH/BC_data
 OUTPATH2=$DATA_PATH/finalOutputData
 OUTPATH3=$DATA_PATH/factors
-
-mkdir -p $OUTPATH1 $OUTPATH2 $OUTPATH3
+mkdir -p $DATA_PATH $OUTPATH1 $OUTPATH2 $OUTPATH3
 
 # export paths, imported in definitions_generic.pro
 cat > gdl_exports <<EOF
@@ -155,11 +151,11 @@ for VAR in $1;do
         if [[ $FACTORS_COMPLETE = "NO" ]];then
             # generate and run construct_${FILE_IDENT}_cor_mon?? scripts
             echo " ...calculating $VAR"
-            cp construct_cor_mon.llsubmit.template construct_${FILE_IDENT}_cor_mon.llsubmit
+            cp templates/construct_cor_mon.llsubmit.template construct_${FILE_IDENT}_cor_mon.llsubmit
             for MON in $(seq 1 12);do
                 touch construct_${FILE_IDENT}_cor_mon$MON.lock
                 MON_INT=$(($MON - 1))
-                sed s/_MON_/$MON_INT/g construct_${FILE_IDENT}_cor_mon_template > construct_${FILE_IDENT}_cor_mon$MON.sh
+                sed s/_MON_/$MON_INT/g templates/construct_${FILE_IDENT}_cor_mon_template > construct_${FILE_IDENT}_cor_mon$MON.sh
                 chmod +x construct_${FILE_IDENT}_cor_mon$MON.sh
                 cat <<EOF >> construct_${FILE_IDENT}_cor_mon.llsubmit
 # @ step_name = construct_${FILE_IDENT}_cor_mon$MON
@@ -220,11 +216,11 @@ EOF
                 done
                 #                echo " APPLY_COMPLETE   :" $APPLY_COMPLETE
                 if [[ $APPLY_COMPLETE = "NO" ]];then
-                    cp apply_cor_mon.llsubmit.template apply_${FILE_IDENT}_cor_mon.llsubmit
+                    cp templates/apply_cor_mon.llsubmit.template apply_${FILE_IDENT}_cor_mon.llsubmit
                     for MON in $(seq 1 12);do
                         touch apply_${FILE_IDENT}_cor_mon$MON.lock
                         MON_INT=$(($MON - 1))
-                        sed s/_MON_/$MON_INT/g apply_${FILE_IDENT}_cor_mon_template > apply_${FILE_IDENT}_cor_mon$MON.sh
+                        sed s/_MON_/$MON_INT/g templates/apply_${FILE_IDENT}_cor_mon_template > apply_${FILE_IDENT}_cor_mon$MON.sh
                         chmod +x apply_${FILE_IDENT}_cor_mon$MON.sh
                         cat <<EOF >> apply_${FILE_IDENT}_cor_mon.llsubmit
 # @ step_name = apply_${FILE_IDENT}_cor_mon$MON
@@ -269,7 +265,6 @@ EOF
             fi
         done #PERIODS
 
-        #        rm runidx.pro period.pro
         #        if [[ $3 != "no" ]];then
         for VAR_IN in $VARS_IN;do
             IFILE1=$OUTPATH2/${VAR_IN}${FILE_TAG}_2000_2049_test.nc
@@ -288,7 +283,7 @@ EOF
                         $OUTPATH2/${VAR_IN}${FILE_TAG}_2050_2099_test.nc
                 fi
             fi
-        done # merge rcp
+        done
         #        fi
 
         [[ $RCP = "rcp2p6" ]] && REPACK_HIST="yes" || REPACK_HIST="no"
@@ -314,7 +309,7 @@ EOF
                 -e "s/_COMPUTE4_/$REPACK_HIST4/" \
                 -e "s/_COMPUTE5_/$REPACK_HIST5/" \
                 -e "s/_COMPUTE6_/$REPACK_FUT/" \
-                repack_ia.sh.template > \
+                templates/repack_ia.sh.template > \
                 repack_ia.sh.$VAR_OUT
             echo "repack data for variable $VAR_OUT"
             touch repack_ia.$VAR_OUT.lock
