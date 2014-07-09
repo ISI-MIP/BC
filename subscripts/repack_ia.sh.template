@@ -52,7 +52,7 @@ else
     COMPUTE6=_COMPUTE6_  #"yes" 2006-2099
 fi
 
-./create_cdl_header.sh $VAR $GCM
+subscripts/create_cdl_header.sh $VAR $GCM
 
 cutyear=2005
 
