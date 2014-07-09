@@ -128,7 +128,7 @@ for VAR in $1;do
             if [[ $WFD2IDL_COMPLETE = "NO" || $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit preparefiles_$FILE_IDENT.sh
+                llsubmit subscripts/preparefiles_$FILE_IDENT.sh
                 echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done
@@ -151,11 +151,11 @@ for VAR in $1;do
         if [[ $FACTORS_COMPLETE = "NO" ]];then
             # generate and run construct_${FILE_IDENT}_cor_mon?? scripts
             echo " ...calculating $VAR"
-            cp templates/construct_cor_mon.llsubmit.template construct_${FILE_IDENT}_cor_mon.llsubmit
+            cp subscripts/construct_cor_mon.llsubmit.template construct_${FILE_IDENT}_cor_mon.llsubmit
             for MON in $(seq 1 12);do
                 touch construct_${FILE_IDENT}_cor_mon$MON.lock
                 MON_INT=$(($MON - 1))
-                sed s/_MON_/$MON_INT/g templates/construct_${FILE_IDENT}_cor_mon_template > construct_${FILE_IDENT}_cor_mon$MON.sh
+                sed s/_MON_/$MON_INT/g subscripts/construct_${FILE_IDENT}_cor_mon_template > construct_${FILE_IDENT}_cor_mon$MON.sh
                 chmod +x construct_${FILE_IDENT}_cor_mon$MON.sh
                 cat <<EOF >> construct_${FILE_IDENT}_cor_mon.llsubmit
 # @ step_name = construct_${FILE_IDENT}_cor_mon$MON
@@ -200,7 +200,7 @@ EOF
             if [[ $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR $PERIOD"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit preparefiles_$FILE_IDENT.sh
+                llsubmit subscripts/preparefiles_$FILE_IDENT.sh
                 echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done;echo
@@ -216,11 +216,11 @@ EOF
                 done
                 #                echo " APPLY_COMPLETE   :" $APPLY_COMPLETE
                 if [[ $APPLY_COMPLETE = "NO" ]];then
-                    cp templates/apply_cor_mon.llsubmit.template apply_${FILE_IDENT}_cor_mon.llsubmit
+                    cp subscripts/apply_cor_mon.llsubmit.template apply_${FILE_IDENT}_cor_mon.llsubmit
                     for MON in $(seq 1 12);do
                         touch apply_${FILE_IDENT}_cor_mon$MON.lock
                         MON_INT=$(($MON - 1))
-                        sed s/_MON_/$MON_INT/g templates/apply_${FILE_IDENT}_cor_mon_template > apply_${FILE_IDENT}_cor_mon$MON.sh
+                        sed s/_MON_/$MON_INT/g subscripts/apply_${FILE_IDENT}_cor_mon_template > apply_${FILE_IDENT}_cor_mon$MON.sh
                         chmod +x apply_${FILE_IDENT}_cor_mon$MON.sh
                         cat <<EOF >> apply_${FILE_IDENT}_cor_mon.llsubmit
 # @ step_name = apply_${FILE_IDENT}_cor_mon$MON
@@ -256,7 +256,7 @@ EOF
             if [[ $WRITE_COMPLETE = "NO" ]];then
                 echo " ...writing files"
                 touch $WRITE_SCRIPT.lock
-                llsubmit $WRITE_SCRIPT.sh
+                llsubmit subscripts/$WRITE_SCRIPT.sh
                 echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$WRITE_SCRIPT.out"
                 echo " ...wait for LoadL job to finish..."
                 while test -e $WRITE_SCRIPT.lock;do sleep 5;done;echo
@@ -309,7 +309,7 @@ EOF
                 -e "s/_COMPUTE4_/$REPACK_HIST4/" \
                 -e "s/_COMPUTE5_/$REPACK_HIST5/" \
                 -e "s/_COMPUTE6_/$REPACK_FUT/" \
-                templates/repack_ia.sh.template > \
+                subscripts/repack_ia.sh.template > \
                 repack_ia.sh.$VAR_OUT
             echo "repack data for variable $VAR_OUT"
             touch repack_ia.$VAR_OUT.lock
