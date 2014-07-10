@@ -8,3 +8,4 @@ period.pro
 runidx.pro
 exports.tmp
 *.llsubmit
+log_*.txt

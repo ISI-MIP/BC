@@ -15,4 +15,4 @@ exit
 EOF
 
 # remove main script lock
-rm apply_T_cor_mon$((_MON_ + 1)).*
+rm apply_T_cor_mon_MON_FILE_.*
