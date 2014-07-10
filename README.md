@@ -35,20 +35,19 @@ Current setup expects GCM and WATCH input on 0.5° gridded netCDF data in the fo
 ###GDL
 - http://sourceforge.net/projects/gnudatalanguage/
 - gdl is prepackaged in many Linux distributions
-- otherwise compile from source with cmake command:
+- otherwise compile from source with following cmake options:
 ```
-cmake .. \
-    -DCMAKE_INSTALL_PREFIX=/home/buechner/tools \
-    -DHDFDIR=/home/buechner/tools/hdf4 \
-    -DUDUNITS=ON \
-    -DUDUNITSDIR=/home/buechner/tools \
-    -DGSLDIR=/iplex/01/2011/isimip/lib/ \
-    -DWXWIDGETS=OFF \
-    -DMAGICK=OFF \
-    -DGRAPHICSMAGICK=OFF \
-    -DEIGEN3=OFF \
-    -DPSLIB=OFF \
-    -DPLPLOTDIR=/home/buechner/tools \
+    -DCMAKE_INSTALL_PREFIX=/home/buechner/tools
+    -DHDFDIR=/home/buechner/tools/hdf4
+    -DUDUNITS=ON
+    -DUDUNITSDIR=/home/buechner/tools
+    -DGSLDIR=/iplex/01/2011/isimip/lib/
+    -DWXWIDGETS=OFF
+    -DMAGICK=OFF
+    -DGRAPHICSMAGICK=OFF
+    -DEIGEN3=OFF
+    -DPSLIB=OFF
+    -DPLPLOTDIR=/home/buechner/tools
     -DOLDPLPLOT=OFF
 ```
 ###CDO
