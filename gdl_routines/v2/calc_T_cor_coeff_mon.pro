@@ -21,6 +21,13 @@ monread=12
 ; specifying the output file for the correction parameters
 outfile=outputdir+'tas_cor_'+construction_period+'_'+month(mon)+'_'+runToCorrect+'_test.dat'
 ;
+print,'Test outfile for existence : '+outfile
+IF ( FILE_TEST(outfile) ) THEN BEGIN
+   print,'Already present. exiting...'
+   exit
+ENDIF
+;
+;
 ; specifying the path to the model data for t2, tmin, tmax
 pfile_temp2=pathmodel+MODELroot_T+construction_period+'_'+month(mon)+'_'+runToCorrect+'_test.dat'
 pfile_tmin=pathmodel+MODELroot_Tmin+construction_period+'_'+month(mon)+'_'+runToCorrect+'_test.dat'

@@ -53,6 +53,12 @@ for typ=0,(n_elements(var_wfd)-1) do begin
                                 ; ... to the watch forcing data
          wfdfile = pathWFD+WFDroot+construction_period+'_'+month(mon)+'_test.dat'
                                 ;
+         print,'Test outfile for existence : '+outfile
+         IF ( FILE_TEST(outfile) ) THEN BEGIN
+            print,'Already present. exiting...'
+            exit
+         ENDIF
+         ;
          print,'Using '+pfile+' and '+wfdfile+' to produce correction factors. Stored in ' +outfile+'.'
                                 ;
                                 ;Get WFD for construction_period*************************************
