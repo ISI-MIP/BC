@@ -6,8 +6,8 @@ gdl <<EOF
 .r period.pro
 .r runidx.pro
 .r gdl_exports
-.r definitions_generic.pro
-.r definitions_internal_generic.pro
+.r definitions/definitions_generic.pro
+.r definitions/definitions_internal_generic.pro
 .r gdl_routines/generic/functions.pro
 mon = _MON_
 .r gdl_routines/$BC_VERSION/calc_P_cor_coeff_mon.pro

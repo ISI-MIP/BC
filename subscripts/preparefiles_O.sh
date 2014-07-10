@@ -21,8 +21,8 @@ gdl <<EOF
 .r period.pro
 .r runidx.pro
 .r gdl_exports
-.r definitions_generic.pro
-.r definitions_internal_generic.pro
+.r definitions/definitions_generic.pro
+.r definitions/definitions_internal_generic.pro
 .r gdl_routines/generic/ncdf2idl.pro
 .r gdl_routines/generic/prepareData.pro
 .r gdl_routines/generic/count_processed.pro

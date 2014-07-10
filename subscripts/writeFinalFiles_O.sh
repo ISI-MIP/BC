@@ -20,8 +20,8 @@ gdl <<EOF
 .r period.pro
 .r runidx.pro
 .r gdl_exports
-.r definitions_generic.pro
-.r definitions_internal_generic.pro
+.r definitions/definitions_generic.pro
+.r definitions/definitions_internal_generic.pro
 .r gdl_routines/generic/createNCDF_v2.pro
 .r gdl_routines/generic/create1dNCDF.pro
 .r gdl_routines/generic/idl2latlon_O.pro
