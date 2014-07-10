@@ -12,7 +12,7 @@ Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-pr
 ## Short manual
 Main script is *BC_Skript.sh* and intended to bias correct the temperature (mean, min and max), precipitation (total and snowfall), wind (eastward, northward and total), radiation (longwave down and shortwave down) and surface pressure of selected CMIP5 GCMs to WATCH Forcing Data level. If you use the script you have to correct the variables in a row, parallel is not possible as the some of the definition files will be overwritten or deleted after a calculation has finished. Relative humidity (rhs) was added but only supports a rewrite along with calender interpolation (no bias correction here).
 
-**Important:** This code environment heavily relies on specific hard and software prerequisites. Most of the GDL scripts require a large amount of available RAM. At PIK the scripts ran successfully on 26GB RAM Linux compute nodes with IBM LoadLeveler job scheduling. Executing the scipts on nodes equiped with less RAM or shared memory usage with other users/jobs regularly failed. Moreover the following software utilities are needed (links and hints at page bottom):
+**Important:** This code environment heavily relies on specific hard and software prerequisites. Most of the GDL scripts require a large amount of available RAM. At PIK the scripts ran successfully on 13GB RAM per job Linux compute nodes with IBM LoadLeveler job scheduling system. Executing the scipts on nodes not allowed to use more than 3.5GB RAM per job failed. Moreover the following software utilities are needed (links and hints at page bottom):
 
 - GDL/IDL (GNU Data Language)
 - CDO (Climate Data Operators)
