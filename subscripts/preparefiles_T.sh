@@ -1,5 +1,5 @@
 #!/bin/sh
-# @ initialdir = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+# @ initialdir = _WRKDIR_
 # @ input = /dev/null
 # @ job_type = serial
 # @ class = largemem
@@ -10,8 +10,8 @@
 # @ comment = ISI-MIP IO
 # @ checkpoint = no
 # @ restart = no
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_T.out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_T.err
+# @ output = _WRKDIR_/ll.logs/preparefiles_T.out
+# @ error =  _WRKDIR_/ll.logs/preparefiles_T.err
 # @ queue
 
 . exports

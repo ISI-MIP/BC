@@ -1,5 +1,5 @@
 #!/bin/bash
-# @ initialdir = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+# @ initialdir = _WRKDIR_
 # @ input = /dev/null
 # @ job_type = serial
 # @ class = short
@@ -10,8 +10,8 @@
 # @ comment = ISI-MIP IO
 # @ checkpoint = no
 # @ restart = no
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack._VAR_.out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack._VAR_.err
+# @ output = _WRKDIR_/ll.logs/repack._VAR_.out
+# @ error =  _WRKDIR_/ll.logs/repack._VAR_.err
 # @ queue
 
 ###############################################################
@@ -81,11 +81,7 @@ esac
 [[ $GCM = "GFDL-ESM2M" ]] && HIST_START_YEAR=1861 || HIST_START_YEAR=1860
 
 ########### paths ###############
-inpath_crugrid=$BASE_PATH
-inpath_model="/iplex/01/ipcc_ar4_pcmdi/cmip5_ethz_mirror/pcmdi_data"
-outpath_crugrid="/iplex/01/2011/isimip/data/modelData"
-
-inpath=$inpath_crugrid/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
+inpath=$BASE_PATH/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
 outpath=$inpath/repacked
 
 mkdir -p $outpath/merged

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# @ initialdir = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$(job_name).out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$(job_name).err
+# @ initialdir = _WRKDIR_
+# @ output = _WRKDIR_/ll.logs/$(job_name).out
+# @ error =  _WRKDIR_/ll.logs/$(job_name).err
 # @ input = /dev/null
 # @ job_type = serial
 # @ class = short

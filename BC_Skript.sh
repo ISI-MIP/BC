@@ -27,7 +27,7 @@ DATA_PATH=$BASE_PATH/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
 OUTPATH1=$DATA_PATH/BC_data
 OUTPATH2=$DATA_PATH/finalOutputData
 OUTPATH3=$DATA_PATH/factors
-mkdir -p $DATA_PATH $OUTPATH1 $OUTPATH2 $OUTPATH3
+mkdir -p $DATA_PATH $OUTPATH1 $OUTPATH2 $OUTPATH3 ll.logs
 
 # export paths, imported in definitions_generic.pro
 cat > gdl_exports <<EOF
@@ -127,8 +127,9 @@ for VAR in $1;do
             if [[ $WFD2IDL_COMPLETE = "NO" || $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit subscripts/preparefiles_$FILE_IDENT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit subscripts/$LL_SCRIPT && rm $LL_SCRIPT
+                echo " logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done
                 rm exports.tmp
@@ -159,8 +160,8 @@ for VAR in $1;do
                 chmod +x construct_${FILE_IDENT}_cor_mon$MON.sh
                 cat <<EOF >> $CONSTRUCT_MAIN_SCRIPT
 # @ step_name = construct_${FILE_IDENT}_cor_mon$MON
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).err
+# @ output = $WRKDIR/ll.logs/\$(step_name).out
+# @ error =  $WRKDIR/ll.logs/\$(step_name).err
 # @ class = largemem
 # @ executable = $WRKDIR/construct_${FILE_IDENT}_cor_mon$MON.sh
 # @ queue
@@ -168,15 +169,16 @@ for VAR in $1;do
 EOF
             fi
         done
+        sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $CONSTRUCT_MAIN_SCRIPT
         if [[ $COMPUTE_TF = "YES" ]];then
-            llsubmit $CONSTRUCT_MAIN_SCRIPT
-            echo "logfiles: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/construct_${FILE_IDENT}_cor_mon*.out"
+            echo -n " ";llsubmit $CONSTRUCT_MAIN_SCRIPT
+            echo " logfiles: $WRKDIR/ll.logs/construct_${FILE_IDENT}_cor_mon*.out"
             echo " ...wait for LoadL jobs to finish..."
             while ls construct_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
         else
             echo " transfer functions for all months already calculated"
         fi
-        rm $CONSTRUCT_MAIN_SCRIPT
+        rm -f $CONSTRUCT_MAIN_SCRIPT
     else
         echo " Factors for rhs not needed."
     fi
@@ -205,8 +207,10 @@ EOF
             if [[ $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR $PERIOD"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit subscripts/preparefiles_$FILE_IDENT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
+                LL_SCRIPT=preparefiles_$FILE_IDENT.sh
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+                echo "logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done;echo
             else
@@ -237,8 +241,8 @@ EOF
                         chmod +x apply_${FILE_IDENT}_cor_mon$MON.sh
                         cat <<EOF >> $APPLY_MAIN_SCRIPT
 # @ step_name = apply_${FILE_IDENT}_cor_mon$MON
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).err
+# @ output = $WRKDIR/ll.logs/\$(step_name).out
+# @ error =  $WRKDIR/ll.logs/\$(step_name).err
 # @ class = largemem
 # @ executable = $WRKDIR/apply_${FILE_IDENT}_cor_mon$MON.sh
 # @ queue
@@ -246,15 +250,16 @@ EOF
 EOF
                     fi
                 done
+                sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $APPLY_MAIN_SCRIPT
                 if [[ $APPLY_TF = "YES" ]];then
-                    llsubmit $APPLY_MAIN_SCRIPT
-                    echo " logfiles: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
+                    echo -n " ";llsubmit $APPLY_MAIN_SCRIPT
+                    echo " logfiles: $WRKDIR/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
                     echo " ...wait for LoadL jobs to finish..."
                     while ls apply_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
                 else
                     echo " ...transfer function already applied to all months"
                 fi
-                rm $APPLY_MAIN_SCRIPT
+                rm -f $APPLY_MAIN_SCRIPT
             else
                 echo " bias correction for rhs not needed."
             fi
@@ -270,8 +275,10 @@ EOF
             if [[ $WRITE_COMPLETE = "NO" ]];then
                 echo " ...writing files"
                 touch $WRITE_SCRIPT.lock
-                llsubmit subscripts/$WRITE_SCRIPT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$WRITE_SCRIPT.out"
+                LL_SCRIPT=$WRITE_SCRIPT.sh
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+                echo " logfile: $WRKDIR/ll.logs/$WRITE_SCRIPT.out"
                 echo " ...wait for LoadL job to finish..."
                 while test -e $WRITE_SCRIPT.lock;do sleep 5;done;echo
             else
@@ -313,7 +320,9 @@ EOF
         fi
 
         for VAR_OUT in $VARS_OUT;do
+            LL_SCRIPT=repack_ia.sh.$VAR_OUT
             sed \
+                -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" \
                 -e "s/_RCP_/$RCP/" \
                 -e "s/_GCM_/$GCM/" \
                 -e "s/_VAR_/$VAR_OUT/g" \
@@ -324,11 +333,10 @@ EOF
                 -e "s/_COMPUTE5_/$REPACK_HIST5/" \
                 -e "s/_COMPUTE6_/$REPACK_FUT/" \
                 subscripts/repack_ia.sh.template > \
-                repack_ia.sh.$VAR_OUT
+                $LL_SCRIPT
             echo "repack data for variable $VAR_OUT"
-            touch repack_ia.$VAR_OUT.lock
-            llsubmit repack_ia.sh.$VAR_OUT && rm repack_ia.sh.$VAR_OUT
-            echo "logfiles: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack.out"
+            echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+            echo "logfiles: $WRKDIR/ll.logs/repack.out"
         done
     done
     #        rm $OUTPATH?/*${VAR}*

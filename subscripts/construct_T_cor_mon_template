@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines
+cd _WRKDIR_
 . exports
 
 gdl <<EOF
