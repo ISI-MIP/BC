@@ -22,16 +22,12 @@ WRKDIR=$(pwd)
 
 GCM=$4
 
-
 # create output folders
-
 DATA_PATH=$BASE_PATH/${GCM}_${BC_VERSION}_run$BC_RUN_INTERNAL
-
 OUTPATH1=$DATA_PATH/BC_data
 OUTPATH2=$DATA_PATH/finalOutputData
 OUTPATH3=$DATA_PATH/factors
-
-mkdir -p $OUTPATH1 $OUTPATH2 $OUTPATH3
+mkdir -p $DATA_PATH $OUTPATH1 $OUTPATH2 $OUTPATH3 ll.logs
 
 # export paths, imported in definitions_generic.pro
 cat > gdl_exports <<EOF
@@ -55,46 +51,45 @@ for VAR in $1;do
         T)
             VARS_IN="T Tmin Tmax"
             VARS_OUT="tas tasmin tasmax"
-#            VARS_OUT="tasmin"
             VARS_WFD_IDL=$VARS_IN
             VARS_MODEL_IDL=$VARS_IN
-            VARS_FACTORS="tas";;
+            VAR_TF="tas";;
         P)
             VARS_IN="pr pr_PRSN"
             VARS_OUT="pr prsn"
             VARS_WFD_IDL="pr"
             VARS_MODEL_IDL="precip prsn"
-            VARS_FACTORS="pr";;
+            VAR_TF="pr";;
         LW)
             VARS_IN="lw"
             VARS_OUT="rlds"
             VARS_WFD_IDL=$VARS_IN
             VARS_MODEL_IDL=$VARS_IN
-            VARS_FACTORS="lw";;
+            VAR_TF="lw";;
         SW)
             VARS_IN="sw"
             VARS_OUT="rsds"
             VARS_WFD_IDL=$VARS_IN
             VARS_MODEL_IDL=$VARS_IN
-            VARS_FACTORS="sw";;
+            VAR_TF="sw";;
         ps)
             VARS_IN="ps"
             VARS_OUT="ps"
             VARS_WFD_IDL=$VARS_IN
             VARS_MODEL_IDL=$VARS_IN
-            VARS_FACTORS="ps";;
+            VAR_TF="ps";;
         wind)
             VARS_IN="U V wind"
             VARS_OUT="uas vas wind"
             VARS_WFD_IDL="wind"
             VARS_MODEL_IDL="U V"
-            VARS_FACTORS="wind";;
+            VAR_TF="wind";;
         rhs)
             VARS_IN="rhs"
             VARS_OUT="rhs"
             VARS_WFD_IDL="hur"
             VARS_MODEL_IDL="rhs"
-            VARS_FACTORS="rhs";;
+            VAR_TF="rhs";;
         *)
             echo "no valid variable";exit;;
     esac
@@ -132,12 +127,12 @@ for VAR in $1;do
             if [[ $WFD2IDL_COMPLETE = "NO" || $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit preparefiles_$FILE_IDENT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit subscripts/$LL_SCRIPT && rm $LL_SCRIPT
+                echo " logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done
                 rm exports.tmp
-                echo
             else
                 echo " WFD and GCM data already converted to IDL format."
             fi
@@ -146,36 +141,43 @@ for VAR in $1;do
 
     # calculate transfer function
     if [[ $VAR != "rhs" ]];then
-        FACTORS_COMPLETE=YES
-        for VAR_FACTORS in $VARS_FACTORS;do
-            [[ $VAR = "rhs" ]] && continue
-            [[ $(ls $OUTPATH3/${VAR_FACTORS}_cor_1960_1999*.dat 2>/dev/null |wc -l 2> /dev/null ) -lt 12 ]] && FACTORS_COMPLETE="NO"
-        done
-        #        echo " FACTORS_COMPLETE :" $FACTORS_COMPLETE
-        if [[ $FACTORS_COMPLETE = "NO" ]];then
-            # generate and run construct_${FILE_IDENT}_cor_mon?? scripts
-            echo " ...calculating $VAR"
-            cp construct_cor_mon.llsubmit.template construct_${FILE_IDENT}_cor_mon.llsubmit
-            for MON in $(seq 1 12);do
+        COMPUTE_TF=NO
+        echo " ...calculating transfer function for $VAR"
+        CONSTRUCT_MAIN_SCRIPT=construct_${FILE_IDENT}_cor.llsubmit
+        cp subscripts/construct_cor_mon.llsubmit.template $CONSTRUCT_MAIN_SCRIPT
+        for MON in $(seq 1 12);do
+            [[ $MON -lt 10 ]] && MON=0$MON
+            if [[ ! -e $OUTPATH3/${VAR_TF}_cor_1960_1999_${MON}__test.dat ]];then
+                echo "  ...include factor contruction for month $MON"
+                COMPUTE_TF=YES
                 touch construct_${FILE_IDENT}_cor_mon$MON.lock
-                MON_INT=$(($MON - 1))
-                sed s/_MON_/$MON_INT/g construct_${FILE_IDENT}_cor_mon_template > construct_${FILE_IDENT}_cor_mon$MON.sh
+                MON_INT=$((10#$MON - 1))
+                sed -e s/_MON_GDL_/$MON_INT/ \
+                    -e s/_MON_FILE_/$MON/ \
+                    subscripts/construct_${FILE_IDENT}_cor_mon_template > \
+                    construct_${FILE_IDENT}_cor_mon$MON.sh
                 chmod +x construct_${FILE_IDENT}_cor_mon$MON.sh
-                cat <<EOF >> construct_${FILE_IDENT}_cor_mon.llsubmit
+                cat <<EOF >> $CONSTRUCT_MAIN_SCRIPT
 # @ step_name = construct_${FILE_IDENT}_cor_mon$MON
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).err
+# @ output = $WRKDIR/ll.logs/\$(step_name).out
+# @ error =  $WRKDIR/ll.logs/\$(step_name).err
 # @ class = largemem
 # @ executable = $WRKDIR/construct_${FILE_IDENT}_cor_mon$MON.sh
 # @ queue
+
 EOF
-            done
-            llsubmit construct_${FILE_IDENT}_cor_mon.llsubmit && rm construct_${FILE_IDENT}_cor_mon.llsubmit
+            fi
+        done
+        sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $CONSTRUCT_MAIN_SCRIPT
+        if [[ $COMPUTE_TF = "YES" ]];then
+            echo -n " ";llsubmit $CONSTRUCT_MAIN_SCRIPT
+            echo " logfiles: $WRKDIR/ll.logs/construct_${FILE_IDENT}_cor_mon*.out"
             echo " ...wait for LoadL jobs to finish..."
             while ls construct_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
         else
-            echo " Factors already generated."
+            echo " transfer functions for all months already calculated"
         fi
+        rm -f $CONSTRUCT_MAIN_SCRIPT
     else
         echo " Factors for rhs not needed."
     fi
@@ -183,7 +185,7 @@ EOF
     # correct data
     for RCP in $RCPS_INT;do
         for PERIOD in $PERIODS;do
-            echo "Processing period $PERIOD ..."
+            echo " ...processing transfer function application for period $VAR $RCP $PERIOD ..."
             if [[ $PERIOD = "${HIST_START_YEAR}_1899" ]] || [[ $PERIOD = "1900_1949" ]] || [[ $PERIOD = "1950_1959" ]] || [[ $PERIOD = "1960_1999" ]];then
                 if [[ $RCP = "rcp4p5" ]] || [[ $RCP = "rcp6p0" ]] || [[ $RCP = "rcp8p5" ]];then
                     continue
@@ -204,8 +206,10 @@ EOF
             if [[ $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR $PERIOD"
                 touch preparefiles_$FILE_IDENT.lock
-                llsubmit preparefiles_$FILE_IDENT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/preparefiles_$FILE_IDENT.out"
+                LL_SCRIPT=preparefiles_$FILE_IDENT.sh
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+                echo " logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done;echo
             else
@@ -213,38 +217,48 @@ EOF
             fi
 
             if [[ $VAR != "rhs" ]];then
-                APPLY_COMPLETE=YES
-                for VAR_IN in $VARS_IN;do
-                    [[ $VAR = "rhs" ]] && continue
-                    [[ $(ls $OUTPATH1/${VAR_IN}_BCed_1960_1999_$PERIOD*.dat 2>/dev/null |wc -l ) -lt 12 ]] && APPLY_COMPLETE=NO > /dev/null
-                done
-                #                echo " APPLY_COMPLETE   :" $APPLY_COMPLETE
-                if [[ $APPLY_COMPLETE = "NO" ]];then
-                    cp apply_cor_mon.llsubmit.template apply_${FILE_IDENT}_cor_mon.llsubmit
-                    for MON in $(seq 1 12);do
+                APPLY_TF=NO
+                APPLY_MAIN_SCRIPT=apply_${FILE_IDENT}_cor.llsubmit
+                cp subscripts/apply_cor_mon.llsubmit.template $APPLY_MAIN_SCRIPT
+                for MON in $(seq 1 12);do
+                    [[ $MON -lt 10 ]] && MON=0$MON
+                    APPLY_THIS_MON=NO
+                    for VAR_IN in $VARS_IN;do
+                        if [[ ! -e $OUTPATH1/${VAR_IN}_BCed_1960_1999_${PERIOD}_${MON}_test.dat ]];then
+                            APPLY_TF=YES
+                            APPLY_THIS_MON=YES
+                        fi
+                    done
+                    if [[ $APPLY_THIS_MON = "YES" ]];then
+                        echo " ...include transfer function application for month $MON"
                         touch apply_${FILE_IDENT}_cor_mon$MON.lock
-                        MON_INT=$(($MON - 1))
-                        sed s/_MON_/$MON_INT/g apply_${FILE_IDENT}_cor_mon_template > apply_${FILE_IDENT}_cor_mon$MON.sh
+                        MON_INT=$((10#$MON - 1))
+                        sed -e s/_MON_GDL_/$MON_INT/ \
+                            -e s/_MON_FILE_/$MON/ \
+                            subscripts/apply_${FILE_IDENT}_cor_mon_template > \
+                            apply_${FILE_IDENT}_cor_mon$MON.sh
                         chmod +x apply_${FILE_IDENT}_cor_mon$MON.sh
-                        cat <<EOF >> apply_${FILE_IDENT}_cor_mon.llsubmit
+                        cat <<EOF >> $APPLY_MAIN_SCRIPT
 # @ step_name = apply_${FILE_IDENT}_cor_mon$MON
-# @ output = /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).out
-# @ error =  /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/\$(step_name).err
+# @ output = $WRKDIR/ll.logs/\$(step_name).out
+# @ error =  $WRKDIR/ll.logs/\$(step_name).err
 # @ class = largemem
 # @ executable = $WRKDIR/apply_${FILE_IDENT}_cor_mon$MON.sh
 # @ queue
 
 EOF
-                    done
-
-                    echo " ...applying ${VAR} rcp 2.6 $PERIOD"
-                    llsubmit apply_${FILE_IDENT}_cor_mon.llsubmit && rm apply_${FILE_IDENT}_cor_mon.llsubmit
-                    echo "logfiles: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
+                    fi
+                done
+                sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $APPLY_MAIN_SCRIPT
+                if [[ $APPLY_TF = "YES" ]];then
+                    echo -n " ";llsubmit $APPLY_MAIN_SCRIPT
+                    echo " logfiles: $WRKDIR/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
                     echo " ...wait for LoadL jobs to finish..."
                     while ls apply_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
                 else
-                    echo " bias correction already applied."
+                    echo " ...transfer function already applied to all months"
                 fi
+                rm -f $APPLY_MAIN_SCRIPT
             else
                 echo " bias correction for rhs not needed."
             fi
@@ -260,8 +274,10 @@ EOF
             if [[ $WRITE_COMPLETE = "NO" ]];then
                 echo " ...writing files"
                 touch $WRITE_SCRIPT.lock
-                llsubmit $WRITE_SCRIPT.sh
-                echo "logfile: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/$WRITE_SCRIPT.out"
+                LL_SCRIPT=$WRITE_SCRIPT.sh
+                sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
+                echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+                echo " logfile: $WRKDIR/ll.logs/$WRITE_SCRIPT.out"
                 echo " ...wait for LoadL job to finish..."
                 while test -e $WRITE_SCRIPT.lock;do sleep 5;done;echo
             else
@@ -269,7 +285,6 @@ EOF
             fi
         done #PERIODS
 
-        #        rm runidx.pro period.pro
         #        if [[ $3 != "no" ]];then
         for VAR_IN in $VARS_IN;do
             IFILE1=$OUTPATH2/${VAR_IN}${FILE_TAG}_2000_2049_test.nc
@@ -288,7 +303,7 @@ EOF
                         $OUTPATH2/${VAR_IN}${FILE_TAG}_2050_2099_test.nc
                 fi
             fi
-        done # merge rcp
+        done
         #        fi
 
         [[ $RCP = "rcp2p6" ]] && REPACK_HIST="yes" || REPACK_HIST="no"
@@ -304,7 +319,9 @@ EOF
         fi
 
         for VAR_OUT in $VARS_OUT;do
+            LL_SCRIPT=repack_ia.sh.$VAR_OUT
             sed \
+                -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" \
                 -e "s/_RCP_/$RCP/" \
                 -e "s/_GCM_/$GCM/" \
                 -e "s/_VAR_/$VAR_OUT/g" \
@@ -314,12 +331,11 @@ EOF
                 -e "s/_COMPUTE4_/$REPACK_HIST4/" \
                 -e "s/_COMPUTE5_/$REPACK_HIST5/" \
                 -e "s/_COMPUTE6_/$REPACK_FUT/" \
-                repack_ia.sh.template > \
-                repack_ia.sh.$VAR_OUT
+                subscripts/repack_ia.sh.template > \
+                $LL_SCRIPT
             echo "repack data for variable $VAR_OUT"
-            touch repack_ia.$VAR_OUT.lock
-            llsubmit repack_ia.sh.$VAR_OUT && rm repack_ia.sh.$VAR_OUT
-            echo "logfiles: /home/buechner/isimip_iplex/data/BC_ISIMIP2/BC_routines/ll.logs/repack.out"
+            echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
+            echo " logfiles: $WRKDIR/ll.logs/repack.out"
         done
     done
     #        rm $OUTPATH?/*${VAR}*

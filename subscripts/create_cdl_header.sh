@@ -1,5 +1,4 @@
 #!/bin/bash
-. exports
 
 case $1 in
     tas)
@@ -48,5 +47,5 @@ sed -e "s/_VAR_/$1/g" \
     -e "s/_GCM_/$2/g" \
     -e "s/_VERSION_/$BC_VERSION/g" \
     -e "s/_RUN_/$RUN/g" \
-    netcdf_info_generic.cdl > \
+    etc/netcdf_info_generic.cdl > \
     netcdf_info_${2}_$1.cdl
