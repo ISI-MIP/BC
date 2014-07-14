@@ -187,9 +187,8 @@ EOF
         for PERIOD in $PERIODS;do
             echo " ...processing transfer function application for period $VAR $RCP $PERIOD ..."
             if [[ $PERIOD = "${HIST_START_YEAR}_1899" ]] || [[ $PERIOD = "1900_1949" ]] || [[ $PERIOD = "1950_1959" ]] || [[ $PERIOD = "1960_1999" ]];then
-                if [[ $RCP = "rcp4p5" ]] || [[ $RCP = "rcp6p0" ]] || [[ $RCP = "rcp8p5" ]];then
-                    continue
-                fi
+                [[ $3 = "no" ]] && continue
+                [[ $RCP = "rcp4p5" ]] || [[ $RCP = "rcp6p0" ]] || [[ $RCP = "rcp8p5" ]] && continue
                 cp definitions/runidx_historical.pro runidx.pro
             else
                 cp definitions/runidx_$RCP.pro runidx.pro
