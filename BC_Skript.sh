@@ -133,7 +133,6 @@ for VAR in $1;do
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done
                 rm exports.tmp
-                echo
             else
                 echo " WFD and GCM data already converted to IDL format."
             fi
@@ -186,7 +185,7 @@ EOF
     # correct data
     for RCP in $RCPS_INT;do
         for PERIOD in $PERIODS;do
-            echo "Processing transfer function application for period $VAR $RCP $PERIOD ..."
+            echo " ...processing transfer function application for period $VAR $RCP $PERIOD ..."
             if [[ $PERIOD = "${HIST_START_YEAR}_1899" ]] || [[ $PERIOD = "1900_1949" ]] || [[ $PERIOD = "1950_1959" ]] || [[ $PERIOD = "1960_1999" ]];then
                 if [[ $RCP = "rcp4p5" ]] || [[ $RCP = "rcp6p0" ]] || [[ $RCP = "rcp8p5" ]];then
                     continue
@@ -210,7 +209,7 @@ EOF
                 LL_SCRIPT=preparefiles_$FILE_IDENT.sh
                 sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
                 echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
-                echo "logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
+                echo " logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done;echo
             else
@@ -336,7 +335,7 @@ EOF
                 $LL_SCRIPT
             echo "repack data for variable $VAR_OUT"
             echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
-            echo "logfiles: $WRKDIR/ll.logs/repack.out"
+            echo " logfiles: $WRKDIR/ll.logs/repack.out"
         done
     done
     #        rm $OUTPATH?/*${VAR}*
