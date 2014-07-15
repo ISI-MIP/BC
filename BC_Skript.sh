@@ -126,6 +126,7 @@ for VAR in $1;do
             #           echo " MOD2IDL_COMPLETE :" $MOD2IDL_COMPLETE
             if [[ $WFD2IDL_COMPLETE = "NO" || $MOD2IDL_COMPLETE = "NO" ]];then
                 echo " ...preparing $VAR"
+                LL_SCRIPT=preparefiles_$FILE_IDENT.sh
                 touch preparefiles_$FILE_IDENT.lock
                 sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
                 echo -n " ";llsubmit subscripts/$LL_SCRIPT && rm $LL_SCRIPT
