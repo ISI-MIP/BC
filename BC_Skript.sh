@@ -155,6 +155,7 @@ for VAR in $1;do
                 MON_INT=$((10#$MON - 1))
                 sed -e s/_MON_GDL_/$MON_INT/ \
                     -e s/_MON_FILE_/$MON/ \
+                    -e s/_WRKDIR_/${WRKDIR//\//\\/}/g \
                     subscripts/construct_${FILE_IDENT}_cor_mon_template > \
                     construct_${FILE_IDENT}_cor_mon$MON.sh
                 chmod +x construct_${FILE_IDENT}_cor_mon$MON.sh
@@ -235,6 +236,7 @@ EOF
                         MON_INT=$((10#$MON - 1))
                         sed -e s/_MON_GDL_/$MON_INT/ \
                             -e s/_MON_FILE_/$MON/ \
+                            -e s/_WRKDIR_/${WRKDIR//\//\\/}/g \
                             subscripts/apply_${FILE_IDENT}_cor_mon_template > \
                             apply_${FILE_IDENT}_cor_mon$MON.sh
                         chmod +x apply_${FILE_IDENT}_cor_mon$MON.sh
