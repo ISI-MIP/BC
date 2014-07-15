@@ -129,7 +129,7 @@ for VAR in $1;do
                 LL_SCRIPT=preparefiles_$FILE_IDENT.sh
                 touch preparefiles_$FILE_IDENT.lock
                 sed -e "s/_WRKDIR_/${WRKDIR//\//\\/}/g" subscripts/$LL_SCRIPT > $LL_SCRIPT
-                echo -n " ";llsubmit subscripts/$LL_SCRIPT && rm $LL_SCRIPT
+                echo -n " ";llsubmit $LL_SCRIPT && rm $LL_SCRIPT
                 echo " logfile: $WRKDIR/ll.logs/preparefiles_$FILE_IDENT.out"
                 echo " ...wait for LoadL jobs to finish..."
                 while test -e preparefiles_$FILE_IDENT.lock;do sleep 5;done
