@@ -14,7 +14,7 @@ Main script is *BC_Skript.sh* and intended to bias correct the temperature (mean
 
 **Important:** This code environment heavily relies on specific hard and software prerequisites. Most of the GDL scripts require a large amount of available RAM. At PIK the scripts ran successfully on 13GB RAM per job Linux compute nodes with IBM LoadLeveler job scheduling system. Executing the scipts on nodes not allowed to use more than 3.5GB RAM per job failed. Moreover the following software utilities are needed (links and hints at page bottom):
 
-- GDL/IDL (GNU Data Language)
+- GDL/IDL (GNU Data Language) with CMSVLIB (http://www.physics.wisc.edu/~craigm/idl/cmsave.html)
 - CDO (Climate Data Operators)
 - LoadLeveler calls may be replaced with usual shell scripts calls
 - recompile repack/repack_BCdata.c on your system
