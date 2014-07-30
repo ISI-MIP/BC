@@ -187,7 +187,6 @@ EOF
     # correct data
     for RCP in $RCPS_INT;do
         for PERIOD in $PERIODS;do
-            echo " ...processing transfer function application for period $VAR $RCP $PERIOD ..."
             if [[ $PERIOD = "${HIST_START_YEAR}_1899" ]] || [[ $PERIOD = "1900_1949" ]] || [[ $PERIOD = "1950_1959" ]] || [[ $PERIOD = "1960_1999" ]];then
                 [[ $3 = "no" ]] && continue
                 [[ $RCP = "rcp4p5" ]] || [[ $RCP = "rcp6p0" ]] || [[ $RCP = "rcp8p5" ]] && continue
@@ -196,6 +195,7 @@ EOF
                 cp definitions/runidx_$RCP.pro runidx.pro
             fi
 
+            echo " ...processing transfer function application for period $VAR $RCP $PERIOD ..."
             cp definitions/period_$PERIOD.pro period.pro
 
             MOD2IDL_COMPLETE=YES
