@@ -94,11 +94,11 @@ for typ=0,(n_elements(var_wfd)-1) do begin
       print,'outputfile',outfile
 
                                 ;******************************************************************
-      print,'Checking consistency of input data ...'
-      IF (min(pr_c) LT -1e-10) THEN BEGIN
-         print,'Model has negative values: Exiting.'
-         STOP
-      ENDIF
+      ;; print,'Checking consistency of input data ...'
+      ;; IF (min(pr_c) LT -1e-10) THEN BEGIN
+      ;;    print,'Model has negative values: Exiting.'
+      ;;    STOP
+      ;; ENDIF
                                 ;
 
       meanthismonth_e = 0.0*meanratio

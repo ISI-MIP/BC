@@ -155,12 +155,16 @@ for typ=0,(n_elements(var_wfd)-1) do begin
                                 ;*******************************************************************
                                 ;
                                 ; Performing a basic consistency check and exiting if any data is negative.
-      print,'Checking consistency of input data ...'
-      IF (min(pr_e) LT -1e-10 OR min(pr_o) LT -1e-10) THEN BEGIN
-         print,'Model or WFD has negative precipitation: Exiting.'
-         STOP
-      ENDIF
-      print,'Data passed basic consistency check.'
+      ;; print,'Checking consistency of input data ...'
+      ;; IF (min(pr_e) LT -1e-10) THEN BEGIN
+      ;;    print,'Model has negative precipitation: Exiting.'
+      ;;    STOP
+      ;; ENDIF
+      ;; IF (min(pr_o) LT -1e-10) THEN BEGIN
+      ;;    print,'WFD has negative precipitation: Exiting.'
+      ;;    STOP
+      ;; ENDIF
+      ;; print,'Data passed basic consistency check.'
                                 ;
                                 ;Define bias correction parameters
                                 ;
