@@ -250,17 +250,17 @@ EOF
 
 EOF
           fi
+          sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $APPLY_MAIN_SCRIPT
+          if [[ $APPLY_TF = "YES" ]];then
+            echo -n " ";llsubmit $APPLY_MAIN_SCRIPT
+            echo " logfiles: $WRKDIR/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
+            echo " ...wait for LoadL jobs to finish..."
+            while ls apply_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
+          else
+            echo " ...transfer function already applied to all months"
+          fi
+          rm -f $APPLY_MAIN_SCRIPT
         done
-        sed -i "s/_WRKDIR_/${WRKDIR//\//\\/}/g" $APPLY_MAIN_SCRIPT
-        if [[ $APPLY_TF = "YES" ]];then
-          echo -n " ";llsubmit $APPLY_MAIN_SCRIPT
-          echo " logfiles: $WRKDIR/ll.logs/apply_${FILE_IDENT}_cor_mon*.out"
-          echo " ...wait for LoadL jobs to finish..."
-          while ls apply_${FILE_IDENT}_cor_mon*.lock &> /dev/null;do sleep 5;done;echo
-        else
-          echo " ...transfer function already applied to all months"
-        fi
-        rm -f $APPLY_MAIN_SCRIPT
       else
         echo " bias correction for rhs not needed."
       fi
